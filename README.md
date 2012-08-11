@@ -1,4 +1,6 @@
 circ
 ====
 
-Chrome IRC client
+Minimal Chrome IRC client.
+
+
