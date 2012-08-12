@@ -26,8 +26,9 @@ Array.prototype.remove = function(from, to) {
     });
     $(window).click(function(e) {
       if (currentChannel) {
-        // clear the highlight on window focus
-        switchChannels(currentChannel);
+        l = document.getElementById(currentChannel + '-link');
+        l.style.fontStyle = 'normal';
+        l.style.color = 'black';
       }
       $(cmdBox).focus();
     });
@@ -43,7 +44,7 @@ Array.prototype.remove = function(from, to) {
 
     //fake out like circ-main is a real channel 
     messages = document.getElementById("messages");
-    switchChannels('circ-main');
+    switchChannels('circ-main', false);
     write('circ-main', ["/connect host port nick"])
   }
 
@@ -69,6 +70,28 @@ Array.prototype.remove = function(from, to) {
       send("USER " + nick + ' "' + nick + '"' + ' "localhost" ' + ":" + nick);
     });
 
+  }
+
+  function notify(text, channel) {
+    if (channel == undefined) {
+      channel = this.channel;
+    }
+    if (text.indexOf(myNick) != -1) {
+      if (visual) {
+        var notification = webkitNotifications.createNotification(undefined, 'Nick mentioned', channel);
+        notification.show();
+      }
+
+      if (highlight) {
+        var d = document.getElementById(channel + '-link');
+        d.style.color = 'red';
+      }
+
+      if (audio) {
+        var a = new Audio('beep-21.wav');
+        a.play();
+      }
+    }
   }
 
   function parseResponse(data) {
@@ -100,8 +123,8 @@ Array.prototype.remove = function(from, to) {
         }
         lines.remove(i);
       }
-      else if (lines[i].indexOf("PRIVMSG") != -1) {
-        if (lines[i].indexOf("#") != -1) {
+      else if (lines[i].indexOf("PRIVMSG") == 0) {
+        if (lines[i].indexOf("#") == 8) {
           var from = info.substr(1, info.indexOf("!") - 1);
           var parts = lines[i].split("PRIVMSG")[1];
           var words = parts.split(" ");
@@ -118,39 +141,40 @@ Array.prototype.remove = function(from, to) {
               text = text + " " + words[i];
             }
           }
+          notify(text, channel);
           write(channel, [text + "\n"]);
-
-          if (text.indexOf(myNick) != -1) {
-            if (visual) {
-              var notification = webkitNotifications.createNotification(undefined, 'Nick mentioned', channel);
-              notification.show();
-            }
-
-            if (highlight) {
-              var d = document.getElementById(channel + '-link');
-              d.style.color = 'red';
-            }
-
-            if (audio) {
-              var a = new Audio('beep-21.wav');
-              a.play();
-            }
-          }
         }
-        //TODO handle real private messages here
+        else {
+          //okay, this is a private message. who's it from?
+          from = info.substr(1, info.indexOf("!") - 1);
+          //create a channel for them
+          tmpchannel = currentChannel;
+          switchChannels('msg-'+from, true);
+          switchChannels(tmpchannel, false);
+          d = document.getElementById('msg-'+ from + '-link');
+          d.style.fontStyle = 'italic';
+          //write the message?
+          parts = lines[i].split(" ");
+          parts.remove(0);
+          parts.remove(0);
+          parts[0] = parts[0].substr(1, parts[0].length);
+          data = from + ": " +  parts.join(" ");
+          write('msg-'+from, [data]);
+          notify(data, channel);
+        }
         lines.remove(i)
       }
       else if (lines[i].indexOf("PING") == 0) {
-        var pong = lines[i].split("PING")[1];
+        pong = lines[i].split("PING")[1];
         send("PONG " + pong);
         lines.remove(i);
       }
       else if (lines[i].indexOf("353") == 0) {
         console.log("parsing names");
-        var list = lines[i].split(" = ")[1];
-        var names = list.split(" ");
-        var name_array = [];
-        var chan;
+        list = lines[i].split(" = ")[1];
+        names = list.split(" ");
+        name_array = [];
+        chan = "";
         lines.remove(i);
         for (var i = 0; i < names.length; i++) {
             if (names[i].indexOf("#") == 0) {
@@ -164,9 +188,7 @@ Array.prototype.remove = function(from, to) {
               name_array.push(names[i]);
             }
         }
-        for (var i = 0; i < name_array.length; i++) {
-          addToNicklist(chan, name_array[i]);
-        }
+        addToNicklist(chan, name_array);
       }
       else if (lines[i].indexOf("366") == 0) {
         lines.remove(i);
@@ -180,10 +202,7 @@ Array.prototype.remove = function(from, to) {
         if (partNick != myNick) {
           removeFromNicklist(partChan, partNick);
         }
-      }
-      else {
-        lines[i] = lines[i].replace(/^:[\w\.\!\@\~\-]+\s/, "");
-        console.log(lines[i]);
+        lines.remove(i);
       }
     }
     write("circ-main", lines);
@@ -217,13 +236,14 @@ Array.prototype.remove = function(from, to) {
 
   function addToNicklist(channel, nick) {
     var _channel = this.channel;
+    console.log('adding to ' + _channel);
     if (nick == undefined) {
       return;
     }
     if (_channel in window.myChannels) {
       if (nick.push) {
         for (var i = 0; i < nick.length; i++) {
-          add(_channel, nick);
+          add(_channel, nick[i]);
         }
       }
       else {
@@ -260,13 +280,11 @@ Array.prototype.remove = function(from, to) {
   }
 
   function redrawNicklist(channel) {
-    var _channel = this.channel;
-    var b = window.myChannels[_channel];
-    console.log(b);
-
-    if (window.myChannels[_channel] == null) {
-      _channel = channel;
+    var _channel = channel;
+    if (window.myChannels[_channel] == undefined) {
+      _channel = this.channel;
     }
+
     list = document.getElementById('nicklist');
     $(list).empty();
     for (var i = 0; i < window.myChannels[_channel].length; i++) {
@@ -288,20 +306,30 @@ Array.prototype.remove = function(from, to) {
     m = document.getElementById('messages');
     p = document.getElementById(channel);
     m.removeChild(p);
-    switchChannels('circ-main');
+    switchChannels('circ-main', false);
   }
 
-  function switchChannels(channel) {
+  function switchChannels(channel, msg) {
     currentChannel = channel;
     if (!(channel in myChannels)) {
       //this is a new channel
       //first add a link
       c = document.getElementById('chantab');
       a = document.createElement('A');
-      n = document.createTextNode(channel);
+      if (msg) {
+        n = document.createTextNode(channel);
+      }
+      else {
+        n = document.createTextNode('#'+channel);
+      }
       a.title = channel;
       a.id = channel + '-link';
-      a.onclick = function() { switchChannels(channel) };
+      if (msg) {
+        a.onclick = function() { switchChannels(channel, true) };
+      }
+      else {
+        a.onclick = function() { switchChannels(channel, false) };
+      }
       a.appendChild(n);
       c.appendChild(a);
 
@@ -351,6 +379,11 @@ Array.prototype.remove = function(from, to) {
       case "CONNECT":
         doConnect([parts[1], parts[2], parts[3]]);
         return;
+      case "MSG":
+        if (!(parts[1] in myChannels)) {
+          switchChannels("msg-"+parts[1], true);
+        }
+        break;
       case "JOIN":
         if (parts[1].charAt(0) != '#') {
           //channel command will fail without this, lets add it
@@ -358,19 +391,26 @@ Array.prototype.remove = function(from, to) {
         }
         channel = parseChannel(parts[1]);
         if (!(channel in myChannels)) {
-          switchChannels(channel);
+          switchChannels(channel, false);
         }
         break;
       case "NICK":
         myNick = parts[1];
         break;
       case "PART":
+        if (parts[1] == undefined) {
+          parts[1] = currentChannel;
+        }
         if (parts[1].charAt(0) != '#') {
           //part will fail without this
           parts[1] = '#' + parts[1];
         }
         channel = parseChannel(parts[1]);
         leaveChannel(channel);
+        if (channel.indexOf("msg-") == 0) {
+          // not a real channel
+          return;
+        }
       default:
         break;
     }
@@ -389,7 +429,13 @@ Array.prototype.remove = function(from, to) {
     // they must want to talk to the current channel
     else {
       display = myNick + ": " + data;
-      data = "PRIVMSG #" + currentChannel + " " + data;
+      if (currentChannel.indexOf('msg-') == 0) {
+        to = currentChannel.split("-")[1];
+        data = "PRIVMSG " + to + " :" + data;
+      }
+      else {
+        data = "PRIVMSG #" + currentChannel + " " + data;
+      }
     }
     send(data);
     write(currentChannel, [display]);
