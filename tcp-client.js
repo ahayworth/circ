@@ -39,7 +39,6 @@ Author: Boris Smus (smus@chromium.org)
     this.socketId = null;
     this.isConnected = false;
 
-    log('initialized tcp client');
   }
 
   /**
@@ -81,7 +80,6 @@ Author: Boris Smus (smus@chromium.org)
       socket.connect(this.socketId, this.addr, this.port, this._onConnectComplete.bind(this));
       this.isConnected = true;
     } else {
-      error('Unable to create socket');
     }
   }
 
@@ -90,10 +88,8 @@ Author: Boris Smus (smus@chromium.org)
     setInterval(this._periodicallyRead.bind(this), 500)
 
     if (this.callbacks.connect) {
-      console.log('connect complete');
       this.callbacks.connect();
     }
-    log('onConnectComplete');
   }
 
   TcpClient.prototype._periodicallyRead = function() {
@@ -103,7 +99,6 @@ Author: Boris Smus (smus@chromium.org)
   TcpClient.prototype._onDataRead = function(readInfo) {
     // Call received callback if there's data in the response.
     if (readInfo.resultCode > 0 && this.callbacks.recv) {
-      log('onDataRead');
       // Convert ArrayBuffer to string.
       this._arrayBufferToString(readInfo.data, function(str) {
         this.callbacks.recv(str);
@@ -112,7 +107,6 @@ Author: Boris Smus (smus@chromium.org)
   }
 
   TcpClient.prototype._onWriteComplete = function(writeInfo) {
-    log('onWriteComplete');
     // Call sent callback.
     if (this.callbacks.sent) {
       this.callbacks.sent(writeInfo);
