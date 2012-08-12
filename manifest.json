@@ -1,7 +1,7 @@
 {
   "name": "Chrome IRC",
   "description": "A simple IRC client for Chrome",
-  "version": "1",
+  "version": "2",
   "manifest_version": 2,
   "options_page": "options.html",
   "permissions": [
