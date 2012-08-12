@@ -30,11 +30,15 @@ body {
   position: fixed;
   top: 0;
   right: 0;
+  overflow-y: auto;
 }
 
 #commands {
   position: fixed;
   bottom: 0;
+  left: 0;
+  outline-style: solid;
+  outline-width: thin;
   width: 100%;
   padding: 0px;
   border: 0px;
@@ -46,5 +50,7 @@ body {
   height: 100%;
   border: 0;
   outline-width: 0;
-  margin-top: 10px;
+  margin-top: 0;
+  font-family: monospace;
+  font-size: inherit;
 }

@@ -7,7 +7,7 @@ Array.prototype.remove = function(from, to) {
 
 (function () {
   var tcpClient;
-  var myChannels = {}
+  window.myChannels = {};
   var currentChannel;
   var myNick;
   var audio = false;
@@ -76,7 +76,6 @@ Array.prototype.remove = function(from, to) {
 
     //This could get messy.
     for (var i = 0; i < lines.length; i++) {
-      console.log("raw :" + lines[i]);
       //split out the leading field, as it's informational if it starts with :
       if (lines[i].indexOf(":") == 0) {
         var temp_array = lines[i].split(" ");
@@ -86,21 +85,18 @@ Array.prototype.remove = function(from, to) {
           lines[i] = temp_array.join(" ");
         }
         else {
-          lines[i] = temp_array;
+          lines[i] = temp_array.toString();
         }
       }
 
-      lines[i] = lines[i].toString();
 
       if (lines[i].indexOf("JOIN") != -1) {
         var joinedNick = info.substr(1, info.indexOf("!") - 1);
         // just don't process our own joins, which solves some race conditions?
         if (joinedNick != myNick) {
-          var joinedChan = lines[i].split("JOIN ")[1];
-          joinedChan = joinedChan.substr(2, joinedChan.length); //need to pull off a colon
+          joinedChan = parseChannel(lines[i].split("JOIN ")[1]);
           write(joinedChan, [joinedNick + " has joined channel " + joinedChan]);
-          updateNicklist(joinedChan, joinedNick);
-          redrawNicklist(joinedChan);
+          addToNicklist(joinedChan, joinedNick);
         }
         lines.remove(i);
       }
@@ -113,7 +109,7 @@ Array.prototype.remove = function(from, to) {
           var channel;
           for (var i = 0; i < words.length; i++) {
             if (words[i].indexOf("#") != -1) {
-              channel = words[i].substr(1, words[i].length);
+              channel = parseChannel(words[i]);
             }
             else if (words[i].indexOf(":") != -1) {
               text = text + from + ": " + words[i].substr(words[i].indexOf(":") + 1, words[i].length - 1);
@@ -134,6 +130,11 @@ Array.prototype.remove = function(from, to) {
               var d = document.getElementById(channel + '-link');
               d.style.color = 'red';
             }
+
+            if (audio) {
+              var a = new Audio('beep-21.wav');
+              a.play();
+            }
           }
         }
         //TODO handle real private messages here
@@ -153,7 +154,7 @@ Array.prototype.remove = function(from, to) {
         lines.remove(i);
         for (var i = 0; i < names.length; i++) {
             if (names[i].indexOf("#") == 0) {
-              chan = names[i].substr(1, names[i].length);
+              chan = parseChannel(names[i]);
             }
             else if (names[i].indexOf(":") == 0) {
               names[i] = names[i].substr(1, names[i].length - 1);
@@ -164,9 +165,8 @@ Array.prototype.remove = function(from, to) {
             }
         }
         for (var i = 0; i < name_array.length; i++) {
-          updateNicklist(chan, name_array[i]);
+          addToNicklist(chan, name_array[i]);
         }
-        redrawNicklist(chan);
       }
       else if (lines[i].indexOf("366") == 0) {
         lines.remove(i);
@@ -174,14 +174,16 @@ Array.prototype.remove = function(from, to) {
       else if (lines[i].indexOf("PART") == 0) {
         parts = lines[i].split(" ");
         partNick = info.substr(1, info.indexOf("!") - 1);
-        partChan = parts[1].substr(1, parts[1].length);
+        partChan = parseChannel(parts[1]);
         write(partChan, [partNick + " has left " + partChan]);
         lines[i] = text + "\n";
-        removeFromNicklist(partChan, partNick);
-        redrawNicklist(partChan);
+        if (partNick != myNick) {
+          removeFromNicklist(partChan, partNick);
+        }
       }
       else {
         lines[i] = lines[i].replace(/^:[\w\.\!\@\~\-]+\s/, "");
+        console.log(lines[i]);
       }
     }
     write("circ-main", lines);
@@ -192,7 +194,7 @@ Array.prototype.remove = function(from, to) {
   }
 
   function write(where, what) {
-    where = "#" + where;
+    where = "#" + where; //add # back in so that jquery can use it
     for (var i = 0; i < what.length; i++) {
       if (what[i] != "" && what[i] != undefined) {
         $(where).append(what[i]);
@@ -200,44 +202,93 @@ Array.prototype.remove = function(from, to) {
         window.scrollTo(0, document.body.scrollHeight);
       }
     }
+    $('#chantab').children(where+'-link').css('fontStyle', 'italic');
   }
 
-  function updateNicklist(chan, nick) {
+  function parseChannel(channel) {
+    if (channel.charAt(0) == ':') {
+      return channel.substr(2, channel.length);
+    }
+    if (channel.charAt(0) == '#') {
+      return channel.substr(1, channel.length);
+    }
+    return channel;
+  }
+
+  function addToNicklist(channel, nick) {
+    var _channel = this.channel;
     if (nick == undefined) {
       return;
     }
-    if (chan in myChannels) {
-      if (myChannels[chan].indexOf(nick) == -1) {
-        myChannels[chan].push(nick);
+    if (_channel in window.myChannels) {
+      if (nick.push) {
+        for (var i = 0; i < nick.length; i++) {
+          add(_channel, nick);
+        }
+      }
+      else {
+        add(_channel, nick);
       }
     }
-    else {
-      myChannels[chan] = [nick];
+
+    function add(channel, nick) {
+      if (window.myChannels[channel].indexOf(nick) == -1) {
+        window.myChannels[channel].push(nick);
+      }
     }
+
+    redrawNicklist(channel);
   }
 
-  function removeFromNicklist(chan, nick) {
+  function removeFromNicklist(channel, nick) {
+    var _channel = this.channel;
     if (nick == undefined) {
       return;
     }
-    if (chan in myChannels) {
-      if (myChannels[chan].indexOf(nick) != -1) {
-        myChannels[chan].remove(nick);
+    if (_channel in myChannels) {
+      var idx = window.myChannels[_channel].indexOf(nick);
+      var idx2 = window.myChannels[_channel].indexOf("@"+nick);
+      if (idx != -1) {
+        window.myChannels[_channel].remove(idx);
       }
-      else if (myChannels[chan].indexOf("@" + nick) != -1) {
-        myChannels[chan].remove(nick);
+      else if (idx2 != -1) {
+        window.myChannels[_channel].remove(idx2);
       }
     }
+
+    redrawNicklist(channel);
   }
 
-  function redrawNicklist(chan) {
-    var list = document.getElementById('nicklist');
+  function redrawNicklist(channel) {
+    var _channel = this.channel;
+    var b = window.myChannels[_channel];
+    console.log(b);
+
+    if (window.myChannels[_channel] == null) {
+      _channel = channel;
+    }
+    list = document.getElementById('nicklist');
     $(list).empty();
-    for (var i = 0; i < myChannels[chan].length; i++) {
-      var t = document.createTextNode(myChannels[chan][i]);
-      list.appendChild(t);
-      list.appendChild(document.createElement("BR"));
+    for (var i = 0; i < window.myChannels[_channel].length; i++) {
+      if (window.myChannels[_channel][i] != "") {
+        t = document.createTextNode(window.myChannels[_channel][i]);
+        list.appendChild(t);
+        list.appendChild(document.createElement("BR"));
+      }
     }
+  }
+
+
+
+  function leaveChannel(channel) {
+    delete myChannels[channel]
+    c = document.getElementById('chantab');
+    a = document.getElementById(channel + '-link');
+    c.removeChild(a);
+    m = document.getElementById('messages');
+    p = document.getElementById(channel);
+    m.removeChild(p);
+    switchChannels('circ-main');
   }
 
   function switchChannels(channel) {
@@ -266,22 +317,21 @@ Array.prototype.remove = function(from, to) {
       $(messages).children('div').css('display', 'none');
       messages.appendChild(d);
 
-      //special case for circ-main
-      myChannels['circ-main'] = '';
+      myChannels[channel] = [''];
 
-      updateNicklist(channel, myNick);
-      redrawNicklist(channel);
+      addToNicklist(channel, myNick);
     }
     else {
       //we've been here before, restore it.
-      currentChannel = channel;
       redrawNicklist(channel);
+      currentChannel = channel;
       a = document.getElementById(channel + '-link');
       //clear the highlight, whether or not it exists
       a.style.color = 'black';
       //set the underlines
       $('#chantab').children('a').css('text-decoration', 'none');
       a.style.textDecoration = 'underline';
+      a.style.fontStyle = 'normal';
 
       //hide other divs and restore this one
       messages = document.getElementById("messages");
@@ -296,32 +346,36 @@ Array.prototype.remove = function(from, to) {
     parts = command.split(/\s+/);
     parts[0] = parts[0].replace("/", "");
     parts[0] = parts[0].toUpperCase();
-    command = parts.join(" ");
-    display = command;
     // Let's figure out what they wanted to do, so we can take appropriate action
     switch (parts[0]) {
       case "CONNECT":
         doConnect([parts[1], parts[2], parts[3]]);
         return;
       case "JOIN":
-        if (!(parts[1] in myChannels)) {
-          switchChannels(parts[1].substr(1, parts[1].length));
+        if (parts[1].charAt(0) != '#') {
+          //channel command will fail without this, lets add it
+          parts[1] = '#' + parts[1];
+        }
+        channel = parseChannel(parts[1]);
+        if (!(channel in myChannels)) {
+          switchChannels(channel);
         }
         break;
       case "NICK":
         myNick = parts[1];
         break;
       case "PART":
-        var chan = parts[1].substr(1, parts[1]);
-        var d = document.getElementById('nicklist');
-        $(d).empty();
-        delete myChannels[chan];
-        var c = document.getElementById('chantab');
-        var a = document.getElementById(chan + '-link');
-        $(c).remove(a);
+        if (parts[1].charAt(0) != '#') {
+          //part will fail without this
+          parts[1] = '#' + parts[1];
+        }
+        channel = parseChannel(parts[1]);
+        leaveChannel(channel);
       default:
         break;
     }
+    command = parts.join(" ");
+    display = command;
     send(command);
     write("circ-main", [display]);
   }
