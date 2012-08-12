@@ -22,8 +22,10 @@ instructions
 * this is, incidentally, the most hand-holding that circ does
 * all other commands must be specified as normal IRC commands, prefixed with a /
 * to change channels that you have joined, click the link at the top of the window
+* to send a private message, type
+    <pre>/msg theirnick</pre>
+* /part closes a private message window too
 * if you'd like to disable nick notifications, visit the settings page
-* true privmsg support is not here yet, it won't work, so don't try it
 
 bugs
 ====
