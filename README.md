@@ -18,7 +18,7 @@ installation
 instructions
 ====
 * circ only supports connecting to one server (for now)
-  /connect host port nick
+    /connect host port nick
 * this is, incidentally, the most hand-holding that circ does
 * all other commands must be specified as normal IRC commands, prefixed with a /
 * to change channels that you have joined, click the link at the top of the window
