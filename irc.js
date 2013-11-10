@@ -16,6 +16,13 @@ Array.prototype.remove = function(from, to) {
   init();
 
   function init() {
+    $('#options-link').click(function(e) {
+      chrome.app.window.create('options.html', {
+        width: 200,
+        height: 150
+      });
+    });
+
     var cmdBox = document.getElementById("cmdBox");
     $(cmdBox).keydown(function(e) {
       if (e.keyCode == 13) {

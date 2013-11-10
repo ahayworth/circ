@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://web.resource.org/cc/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" id="svg1" viewBox="0 0 60 60" version="1.0" y="0" x="0">
+ <g id="g797" stroke-width="2.0962" stroke="#333" transform="matrix(1.7904 -.54791 .54791 1.7904 -35.301 8.3701)" fill-rule="evenodd">
+  <rect id="rect587" transform="matrix(.301 .51477 -.51477 .301 45.97 31.583)" height="26.339" width="5.2169" y="1.5964" x="-30.665" fill="#b3b3b3"/>
+  <path id="path586" stroke-linejoin="round" d="m-11.656 8.3438c-5.373 0-9.719 4.3452-9.719 9.7182 0 4.086 2.524 7.557 6.094 9v-10.062h7.531v9.969c3.437-1.503 5.8438-4.917 5.8438-8.907 0-5.373-4.3769-9.7182-9.7498-9.7182z" transform="matrix(-.0032888 -.59630 .59630 -.0032888 29.493 8.4961)" stroke-linecap="round" fill="#7f7f7f"/>
+  <path id="path585" stroke-linejoin="round" d="m-11.656 8.3438c-5.373 0-9.719 4.3452-9.719 9.7182 0 4.086 2.524 7.557 6.094 9v-10.062h7.531v9.969c3.437-1.503 5.8438-4.917 5.8438-8.907 0-5.373-4.3769-9.7182-9.7498-9.7182z" transform="matrix(.0032888 .59630 -.59630 .0032888 30.727 34.282)" stroke-linecap="round" fill="#7f7f7f"/>
+ </g>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+    <dc:publisher>
+     <cc:Agent rdf:about="http://openclipart.org/">
+      <dc:title>Openclipart</dc:title>
+     </cc:Agent>
+    </dc:publisher>
+   </cc:Work>
+   <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+    <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+    <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+    <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+   </cc:License>
+  </rdf:RDF>
+ </metadata>
+</svg>

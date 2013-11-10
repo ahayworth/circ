@@ -18,7 +18,7 @@ body {
   z-index: 1;
 }
 
-#chantab a {
+#chantab a:not(#options-link) {
   padding-right: 1em;
 }
 
