@@ -5,8 +5,6 @@ minimal Chrome IRC client
 
 requirements
 ====
-* chrome dev build
-* experimental APIs enabled (chrome://flags)
 * patience
 
 installation

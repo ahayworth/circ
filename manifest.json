@@ -5,10 +5,9 @@
   "manifest_version": 2,
   "options_page": "options.html",
   "permissions": [
-    "experimental",
     "clipboardRead",
     "clipboardWrite",
-    "socket",
+    { "socket": ["tcp-connect"] },
     "storage",
     "notifications"
   ],

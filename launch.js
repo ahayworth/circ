@@ -5,4 +5,4 @@ function onLaunched(launchData) {
   });
 }
 
-chrome.experimental.app.onLaunched.addListener(onLaunched)
+chrome.app.runtime.onLaunched.addListener(onLaunched)
