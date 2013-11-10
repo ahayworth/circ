@@ -1,7 +1,11 @@
 {
-  "name": "Chrome IRC",
-  "description": "A simple IRC client for Chrome",
-  "version": "3",
+  "name": "IRC for Google Chrome™",
+  "description": "A minimalistic IRC client for Chrome",
+  "author": "Andrew Hayworth",
+  "offline_enabled": false,
+  "short_name": "IRC",
+  "icons": { "128": "icon.png" },
+  "version": "4",
   "manifest_version": 2,
   "permissions": [
     "clipboardRead",
